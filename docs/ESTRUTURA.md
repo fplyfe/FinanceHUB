@@ -25,7 +25,6 @@ Internet ─► Nginx (80/443 · TLS · rate limit) ─► app Next.js (:3000) �
 
 ```
 financehub/
-
 ├── .dockerignore                 o que não entra na imagem Docker
 ├── .env.example                  modelo de variáveis de ambiente (copie para .env)
 ├── .gitattributes                força finais de linha LF (scripts .sh no Linux)
