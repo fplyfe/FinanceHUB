@@ -40,6 +40,8 @@ Internet ──► Nginx (80/443, TLS, rate limit) ──► app (Next.js standa
 
 ### Estrutura de pastas
 
+> Mapa completo (cada arquivo, modelo de dados, telas e todos os endpoints): **[docs/ESTRUTURA.md](docs/ESTRUTURA.md)**
+
 ```
 prisma/                 schema.prisma, migrations/, seed.ts
 src/
