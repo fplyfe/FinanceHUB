@@ -99,3 +99,21 @@ export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
   password: z.string().min(1, "Informe a senha"),
 });
+
+export const INVESTMENT_TYPES = ["FIXED_INCOME", "STOCKS", "REITS", "FUNDS", "CRYPTO", "PENSION", "INTERNATIONAL", "OTHER"] as const;
+
+export const investmentSchema = z.object({
+  name: z.string().trim().min(1, "Informe o nome").max(80),
+  type: z.enum(INVESTMENT_TYPES).default("FIXED_INCOME"),
+  institution: optText,
+  color: color.default("#0ea5e9"),
+  notes: optText,
+});
+
+export const investmentEntrySchema = z.object({
+  type: z.enum(["CONTRIBUTION", "WITHDRAWAL", "VALUATION"]),
+  amount: z.coerce.number().min(0, "Valor inválido").max(999_999_999),
+  date: dateStr,
+  accountId: optId,
+  note: optText,
+});

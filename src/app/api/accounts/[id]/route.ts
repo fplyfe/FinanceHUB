@@ -9,10 +9,11 @@ export const PUT = route(async (req, { params }) => {
 
 // Contas com histórico são arquivadas (preserva o histórico); sem uso, são excluídas.
 export const DELETE = route(async (_req, { params }) => {
-  const used = await db.transaction.count({
-    where: { OR: [{ accountId: params.id }, { toAccountId: params.id }] },
-  });
-  if (used > 0) {
+  const [used, invested] = await Promise.all([
+    db.transaction.count({ where: { OR: [{ accountId: params.id }, { toAccountId: params.id }] } }),
+    db.investmentEntry.count({ where: { accountId: params.id } }),
+  ]);
+  if (used + invested > 0) {
     await db.account.update({ where: { id: params.id }, data: { archived: true } });
     return { archived: true };
   }

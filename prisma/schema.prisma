@@ -32,6 +32,23 @@ enum TxStatus {
   PAID
 }
 
+enum InvestmentType {
+  FIXED_INCOME
+  STOCKS
+  REITS
+  FUNDS
+  CRYPTO
+  PENSION
+  INTERNATIONAL
+  OTHER
+}
+
+enum InvestmentEntryType {
+  CONTRIBUTION
+  WITHDRAWAL
+  VALUATION
+}
+
 enum Frequency {
   WEEKLY
   MONTHLY
@@ -50,6 +67,7 @@ model User {
   installmentPlans  InstallmentPlan[]
   recurrings        Recurring[]
   goalContributions GoalContribution[]
+  investmentEntries InvestmentEntry[]
 }
 
 model Account {
@@ -67,6 +85,7 @@ model Account {
   cards             CreditCard[]
   recurrings        Recurring[]
   installmentPlans  InstallmentPlan[]
+  investmentEntries InvestmentEntry[]
 }
 
 model CreditCard {
@@ -209,4 +228,39 @@ model GoalContribution {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([goalId])
+}
+
+model Investment {
+  id          String         @id @default(cuid())
+  name        String
+  type        InvestmentType @default(FIXED_INCOME)
+  institution String?
+  color       String         @default("#0ea5e9")
+  notes       String?
+  archived    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  entries InvestmentEntry[]
+}
+
+/// Movimentações: aporte (CONTRIBUTION), resgate (WITHDRAWAL) ou atualização do valor de mercado (VALUATION).
+/// Com accountId, aporte debita e resgate credita a conta.
+model InvestmentEntry {
+  id           String              @id @default(cuid())
+  investmentId String
+  type         InvestmentEntryType
+  amount       Decimal             @db.Decimal(14, 2)
+  date         DateTime            @db.Date
+  accountId    String?
+  userId       String
+  note         String?
+  createdAt    DateTime            @default(now())
+
+  investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  account    Account?   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([investmentId, date])
+  @@index([accountId])
 }

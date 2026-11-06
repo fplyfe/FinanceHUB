@@ -15,6 +15,8 @@ Controle financeiro pessoal para **dois usuários** (ex.: casal), auto-hospedado
 | Transferências | Entre contas (não contam como receita/despesa) |
 | Parcelamentos | Gera N parcelas mensais (no cartão ou na conta), centavos distribuídos corretamente |
 | Recorrentes | Semanal/mensal/anual, com data de término, débito automático opcional; geradas automaticamente ao abrir o app |
+| Investimentos | Carteira por tipo (renda fixa, ações, FIIs, fundos, cripto, previdência, exterior), aportes/resgates ligados às contas, atualização do valor de mercado, rentabilidade por custo médio, alocação |
+| Patrimônio | Balanço patrimonial: ativos (contas + investimentos) − passivos (cartões + contas negativas), evolução mensal de 12 meses |
 | Metas | Valor alvo, prazo, aportes e resgates, sugestão de valor mensal |
 | Relatórios | Por período, por categoria; exportação **PDF** e **Excel** (.xlsx com 4 abas) |
 | Configurações | Categorias, troca de senha, usuários |
@@ -31,6 +33,7 @@ Internet ──► Nginx (80/443, TLS, rate limit) ──► app (Next.js standa
 - **Mutations** via API REST em `src/app/api/**` (validadas com Zod), chamadas pelos componentes cliente.
 - **Autenticação:** e-mail + senha (bcrypt), sessão em JWT assinado (HS256) em cookie `httpOnly`; middleware protege todas as rotas; limite de tentativas no app e no Nginx.
 - **Regras de dinheiro:** valores em `Decimal(14,2)`; datas como `DATE` (sem fuso) para evitar deslocamentos.
+- **Investimentos:** movimentações (aporte/resgate/atualização de valor); aporte com conta debita o saldo, resgate credita. Lucro calculado por custo médio.
 - **Cartão:** compras ficam `PENDING` na fatura (afetam o limite, não o saldo); ao pagar a fatura viram `PAID` na conta escolhida.
 
 ### Estrutura de pastas
@@ -42,10 +45,10 @@ src/
   app/
     login/              tela de login
     (app)/              área autenticada: dashboard, transactions, accounts, cards,
-                        transfers, installments, recurring, goals, reports, settings
+                        transfers, installments, recurring, investments, net-worth, goals, reports, settings
     api/                auth, accounts, cards (+invoices, pay), categories, transactions,
                         transfers, installments, recurring (+run), goals (+contribute),
-                        reports (pdf, excel), health
+                        reports (pdf, excel), investments (+entries), investment-entries, net-worth, health
   components/ui/        button, card, input/select, dialog, badge/progress (padrão shadcn)
   components/app/       sidebar, form-dialog, month-nav, gráficos
   lib/                  db, auth, api (handler), validators (zod), finance (regras),

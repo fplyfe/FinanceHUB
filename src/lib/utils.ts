@@ -26,3 +26,27 @@ export const ACCOUNT_TYPE_LABEL = {
   WALLET: "Carteira digital",
 } as const;
 export const FREQUENCY_LABEL = { WEEKLY: "Semanal", MONTHLY: "Mensal", YEARLY: "Anual" } as const;
+
+export const INVESTMENT_TYPE_LABEL = {
+  FIXED_INCOME: "Renda fixa",
+  STOCKS: "Ações",
+  REITS: "Fundos imobiliários",
+  FUNDS: "Fundos de investimento",
+  CRYPTO: "Criptomoedas",
+  PENSION: "Previdência",
+  INTERNATIONAL: "Exterior",
+  OTHER: "Outros",
+} as const;
+
+export const INVESTMENT_TYPE_COLOR: Record<keyof typeof INVESTMENT_TYPE_LABEL, string> = {
+  FIXED_INCOME: "#0ea5e9",
+  STOCKS: "#6366f1",
+  REITS: "#f59e0b",
+  FUNDS: "#14b8a6",
+  CRYPTO: "#f97316",
+  PENSION: "#a855f7",
+  INTERNATIONAL: "#22c55e",
+  OTHER: "#64748b",
+};
+
+export const ENTRY_TYPE_LABEL = { CONTRIBUTION: "Aporte", WITHDRAWAL: "Resgate", VALUATION: "Atualização de valor" } as const;

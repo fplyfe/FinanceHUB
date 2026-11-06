@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, CreditCard, PiggyBank, Scale } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CreditCard, Scale } from "lucide-react";
 import { db, n } from "@/lib/db";
 import { accountBalances, getInvoices } from "@/lib/finance";
+import { netWorth } from "@/lib/investments";
 import { MONTHS, currentMonth, monthRange, shiftMonth, today, toStr } from "@/lib/dates";
 import { brl, fmtDate, pct } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ export default async function DashboardPage() {
   const t = today();
   const first = shiftMonth(month, -5);
 
-  const [accounts, balances, cards, goals, monthTx, upcoming] = await Promise.all([
+  const [accounts, balances, cards, goals, monthTx, upcoming, nw] = await Promise.all([
     db.account.findMany({ where: { archived: false }, orderBy: { name: "asc" } }),
     accountBalances(),
     db.creditCard.findMany({ where: { archived: false } }),
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
       take: 8,
       include: { category: { select: { name: true } } },
     }),
+    netWorth(),
   ]);
 
   // Totais por mês (últimos 6) e por categoria (mês atual)
@@ -51,7 +53,6 @@ export default async function DashboardPage() {
     }
   }
   const cur = series[5];
-  const total = [...balances.values()].reduce((a, b) => a + b, 0);
   const catData = [...byCat.values()].sort((a, b) => b.value - a.value);
 
   // Faturas em aberto
@@ -83,7 +84,7 @@ export default async function DashboardPage() {
       <PageHeader title="Dashboard" description="Visão geral das suas finanças neste mês" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stat("Saldo em contas", total, PiggyBank, total < 0 ? "text-destructive" : "")}
+        <Link href="/net-worth">{stat("Patrimônio líquido", nw.net, Scale, nw.net < 0 ? "text-destructive" : "")}</Link>
         {stat("Receitas do mês", cur.income, ArrowUpRight, "text-success")}
         {stat("Despesas do mês", cur.expense, ArrowDownRight, "text-destructive")}
         {stat("Faturas em aberto", openInvoices, CreditCard, "")}

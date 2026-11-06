@@ -4,7 +4,8 @@ import { route } from "@/lib/api";
 import { getReport, defaultRange } from "@/lib/reports";
 import { db, n } from "@/lib/db";
 import { accountBalances } from "@/lib/finance";
-import { fmtDate, TX_TYPE_LABEL } from "@/lib/utils";
+import { netWorth } from "@/lib/investments";
+import { fmtDate, INVESTMENT_TYPE_LABEL, TX_TYPE_LABEL } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,24 @@ export const GET = route(async (req) => {
   const [accounts, bal] = await Promise.all([db.account.findMany({ where: { archived: false }, orderBy: { name: "asc" } }), accountBalances()]);
   for (const a of accounts) s4.addRow([a.name, n(bal.get(a.id))]);
   head(s4);
+
+  const nw = await netWorth();
+  const s5 = wb.addWorksheet("Patrimônio");
+  s5.columns = [
+    { header: "Item", width: 34 },
+    { header: "Grupo", width: 18 },
+    { header: "Valor atual", width: 18, style: { numFmt: money } },
+    { header: "Investido", width: 18, style: { numFmt: money } },
+    { header: "Resultado", width: 18, style: { numFmt: money } },
+  ];
+  for (const a of nw.accounts) s5.addRow([a.name, "Conta", a.balance]);
+  for (const i of nw.investments) s5.addRow([i.name, INVESTMENT_TYPE_LABEL[i.type], i.value, i.invested, i.profit]);
+  for (const c of nw.cards) s5.addRow([`Cartão ${c.name}`, "Dívida", -c.debt]);
+  s5.addRow([]);
+  s5.addRow(["Ativos", null, nw.assets]);
+  s5.addRow(["Passivos", null, -nw.liabilities]);
+  s5.addRow(["Patrimônio líquido", null, nw.net]).font = { bold: true };
+  head(s5);
 
   const buf = await wb.xlsx.writeBuffer();
   return new Response(buf as ArrayBuffer, {

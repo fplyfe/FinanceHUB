@@ -8,27 +8,38 @@ import { installmentSchema, transactionSchema } from "./validators";
 type TxInput = z.infer<typeof transactionSchema>;
 type InstallmentInput = z.infer<typeof installmentSchema>;
 
-/** Saldo de cada conta = saldo inicial + receitas pagas - despesas pagas +/- transferências. */
-export async function accountBalances() {
-  const [accounts, paid, incoming] = await Promise.all([
+/**
+ * Saldo de cada conta = saldo inicial + receitas pagas - despesas pagas +/- transferências
+ * - aportes em investimentos + resgates de investimentos. Com `asOf`, considera só até essa data.
+ */
+export async function accountBalances(asOf?: Date) {
+  const date = asOf ? { lte: asOf } : undefined;
+  const [accounts, paid, incoming, invest] = await Promise.all([
     db.account.findMany({ select: { id: true, initialBalance: true } }),
     db.transaction.groupBy({
       by: ["accountId", "type"],
-      where: { status: "PAID", accountId: { not: null } },
+      where: { status: "PAID", accountId: { not: null }, date },
       _sum: { amount: true },
     }),
     db.transaction.groupBy({
       by: ["toAccountId"],
-      where: { type: "TRANSFER", status: "PAID", toAccountId: { not: null } },
+      where: { type: "TRANSFER", status: "PAID", toAccountId: { not: null }, date },
+      _sum: { amount: true },
+    }),
+    db.investmentEntry.groupBy({
+      by: ["accountId", "type"],
+      where: { accountId: { not: null }, type: { in: ["CONTRIBUTION", "WITHDRAWAL"] }, date },
       _sum: { amount: true },
     }),
   ]);
   const bal = new Map<string, number>(accounts.map((a) => [a.id, n(a.initialBalance)]));
+  const add = (id: string, v: number) => bal.set(id, (bal.get(id) ?? 0) + v);
   for (const r of paid) {
     const v = n(r._sum.amount);
-    bal.set(r.accountId!, (bal.get(r.accountId!) ?? 0) + (r.type === "INCOME" ? v : -v));
+    add(r.accountId!, r.type === "INCOME" ? v : -v);
   }
-  for (const r of incoming) bal.set(r.toAccountId!, (bal.get(r.toAccountId!) ?? 0) + n(r._sum.amount));
+  for (const r of incoming) add(r.toAccountId!, n(r._sum.amount));
+  for (const r of invest) add(r.accountId!, r.type === "WITHDRAWAL" ? n(r._sum.amount) : -n(r._sum.amount));
   for (const [k, v] of bal) bal.set(k, Math.round(v * 100) / 100);
   return bal;
 }
