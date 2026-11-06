@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 224 40% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 10%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 224 40% 15%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 9% 42%;
+    --accent: 238 100% 96%;
+    --accent-foreground: 243 60% 40%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 62% 36%;
+    --border: 220 16% 90%;
+    --input: 220 16% 86%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 30% 7%;
+    --foreground: 220 20% 95%;
+    --card: 224 26% 10%;
+    --card-foreground: 220 20% 95%;
+    --primary: 243 85% 68%;
+    --primary-foreground: 224 30% 8%;
+    --secondary: 224 20% 16%;
+    --secondary-foreground: 220 20% 95%;
+    --muted: 224 20% 14%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 243 30% 20%;
+    --accent-foreground: 243 90% 85%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 55% 50%;
+    --border: 224 18% 18%;
+    --input: 224 18% 22%;
+    --ring: 243 85% 68%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum";
+  }
+  input[type="color"] {
+    @apply h-9 w-12 cursor-pointer rounded-md border border-input bg-transparent p-1;
+  }
+}

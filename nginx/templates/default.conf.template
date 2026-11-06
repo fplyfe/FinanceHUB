@@ -1,0 +1,74 @@
+# Processado pelo entrypoint do Nginx (envsubst): apenas ${DOMAIN} é substituído.
+
+limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+limit_req_zone $binary_remote_addr zone=general:10m rate=20r/s;
+
+upstream financehub_app {
+    server app:3000;
+    keepalive 16;
+}
+
+# ---------- HTTP: desafio ACME + redirecionamento para HTTPS ----------
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------- HTTPS ----------
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+    server_tokens off;
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "same-origin" always;
+
+    client_max_body_size 5m;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml image/svg+xml;
+    gzip_min_length 1024;
+
+    # Força bruta no login
+    location = /api/auth/login {
+        limit_req zone=login burst=5 nodelay;
+        limit_req_status 429;
+        include /etc/nginx/templates/proxy_params.inc;
+        proxy_pass http://financehub_app;
+    }
+
+    # Cache longo para assets imutáveis do Next
+    location /_next/static/ {
+        include /etc/nginx/templates/proxy_params.inc;
+        proxy_pass http://financehub_app;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location / {
+        limit_req zone=general burst=40 nodelay;
+        include /etc/nginx/templates/proxy_params.inc;
+        proxy_pass http://financehub_app;
+    }
+}

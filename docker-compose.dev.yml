@@ -1,0 +1,16 @@
+# Apenas o PostgreSQL para desenvolvimento local (npm run dev).
+# Uso: docker compose -f docker-compose.dev.yml up -d
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: financehub
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: financehub
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+
+volumes:
+  pgdata-dev:
