@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
   const ok = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-  if (!user || !ok) {
+  if (!user || !ok || !user.active) {
     const cur = a && a.reset > now ? a : { count: 0, reset: now + WINDOW };
     cur.count++;
     attempts.set(ip, cur);
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   attempts.delete(ip);
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession(user);
   return NextResponse.json({ ok: true });
 }

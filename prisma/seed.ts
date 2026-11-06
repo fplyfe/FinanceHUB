@@ -22,7 +22,7 @@ async function main() {
     }
     const exists = await db.user.findUnique({ where: { email } });
     if (exists) continue;
-    await db.user.create({ data: { name, email, passwordHash: await bcrypt.hash(password, 12) } });
+    await db.user.create({ data: { name, email, role: "ADMIN", passwordHash: await bcrypt.hash(password, 12) } });
     console.log(`Usuário criado: ${email}`);
   }
 

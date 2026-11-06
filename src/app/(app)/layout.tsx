@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
-      <Sidebar userName={session.name} />
+      <Sidebar userName={session.name} role={session.role} />
       <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:ml-60 lg:p-8">{children}</main>
     </div>
   );

@@ -117,3 +117,27 @@ export const investmentEntrySchema = z.object({
   accountId: optId,
   note: optText,
 });
+
+const email = z.string().trim().toLowerCase().email("E-mail inválido").max(120);
+const newPassword = z.string().min(8, "A senha deve ter ao menos 8 caracteres").max(100);
+
+export const userCreateSchema = z.object({
+  name: z.string().trim().min(1, "Informe o nome").max(60),
+  email,
+  password: newPassword,
+  role: z.enum(["ADMIN", "MEMBER"]).default("MEMBER"),
+});
+
+export const userUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Informe o nome").max(60),
+  email,
+  role: z.enum(["ADMIN", "MEMBER"]),
+  active: z.boolean(),
+});
+
+export const resetPasswordSchema = z.object({ password: newPassword });
+
+export const profileSchema = z.object({
+  name: z.string().trim().min(1, "Informe o nome").max(60),
+  email,
+});

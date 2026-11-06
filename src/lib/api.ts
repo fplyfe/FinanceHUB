@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
-import { getSession } from "./auth";
+import { getSession, type Session } from "./auth";
 import { plain } from "./db";
 
 export class HttpError extends Error {
@@ -13,17 +13,18 @@ export class HttpError extends Error {
   }
 }
 
-type Handler = (req: NextRequest, ctx: { params: Record<string, string>; userId: string }) => Promise<unknown>;
+type Handler = (req: NextRequest, ctx: { params: Record<string, string>; userId: string; session: Session }) => Promise<unknown>;
 
 /** Envolve um handler: autenticação, validação (zod) e tratamento de erros. */
-export function route(handler: Handler) {
+export function route(handler: Handler, opts: { admin?: boolean } = {}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (req: NextRequest, ctx: { params: Promise<any> }) => {
     try {
       const session = await getSession();
       if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+      if (opts.admin && session.role !== "ADMIN") return NextResponse.json({ error: "Apenas administradores" }, { status: 403 });
       const params = (await ctx?.params) ?? {};
-      const data = await handler(req, { params, userId: session.userId });
+      const data = await handler(req, { params, userId: session.userId, session });
       if (data instanceof Response) return data;
       return NextResponse.json(plain(data ?? { ok: true }));
     } catch (e) {

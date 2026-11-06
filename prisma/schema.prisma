@@ -8,6 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  MEMBER
+}
+
 enum AccountType {
   CHECKING
   SAVINGS
@@ -56,12 +61,17 @@ enum Frequency {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  passwordHash   String
+  role           Role      @default(MEMBER)
+  active         Boolean   @default(true)
+  /// Incrementado ao trocar senha/desativar: invalida sessões antigas
+  sessionVersion Int       @default(0)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   transactions      Transaction[]
   installmentPlans  InstallmentPlan[]
@@ -80,8 +90,8 @@ model Account {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  transactions      Transaction[]    @relation("TxAccount")
-  incomingTransfers Transaction[]    @relation("TxToAccount")
+  transactions      Transaction[]     @relation("TxAccount")
+  incomingTransfers Transaction[]     @relation("TxToAccount")
   cards             CreditCard[]
   recurrings        Recurring[]
   installmentPlans  InstallmentPlan[]
@@ -156,16 +166,16 @@ model Transaction {
 }
 
 model InstallmentPlan {
-  id          String   @id @default(cuid())
-  description String
-  totalAmount Decimal  @db.Decimal(14, 2)
+  id           String   @id @default(cuid())
+  description  String
+  totalAmount  Decimal  @db.Decimal(14, 2)
   installments Int
-  firstDate   DateTime @db.Date
-  accountId   String?
-  cardId      String?
-  categoryId  String?
-  userId      String
-  createdAt   DateTime @default(now())
+  firstDate    DateTime @db.Date
+  accountId    String?
+  cardId       String?
+  categoryId   String?
+  userId       String
+  createdAt    DateTime @default(now())
 
   account      Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
   card         CreditCard?   @relation(fields: [cardId], references: [id], onDelete: SetNull)

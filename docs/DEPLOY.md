@@ -48,6 +48,7 @@ Também sobem `certbot` (renova a cada 12h) e `backup` (dump diário às 03:00).
 
 Acesse `https://SEU_DOMINIO` e entre com USER1 ou USER2. **Troque as senhas** em Configurações após o primeiro login
 e, se quiser, remova `USER*_PASSWORD` do `.env` (o seed nunca sobrescreve usuários existentes).
+Os dois usuários iniciais são administradores; novos usuários são cadastrados pela tela **Usuários**.
 
 ## 4. Verificação
 

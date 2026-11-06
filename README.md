@@ -1,6 +1,6 @@
 # FinanceHub
 
-Controle financeiro pessoal para **dois usuários** (ex.: casal), auto-hospedado em VPS com Docker Compose.
+Controle financeiro pessoal compartilhado (ex.: casal ou família), auto-hospedado em VPS com Docker Compose.
 
 **Stack:** Next.js 15 (App Router) · TypeScript · TailwindCSS · componentes no padrão shadcn/ui · PostgreSQL 16 · Prisma 6 · Nginx + Let's Encrypt.
 
@@ -19,7 +19,8 @@ Controle financeiro pessoal para **dois usuários** (ex.: casal), auto-hospedado
 | Patrimônio | Balanço patrimonial: ativos (contas + investimentos) − passivos (cartões + contas negativas), evolução mensal de 12 meses |
 | Metas | Valor alvo, prazo, aportes e resgates, sugestão de valor mensal |
 | Relatórios | Por período, por categoria; exportação **PDF** e **Excel** (.xlsx com 4 abas) |
-| Configurações | Categorias, troca de senha, usuários |
+| Usuários | Cadastro, edição, perfis (Administrador/Membro), desativação sem perder histórico, redefinição de senha, último acesso |
+| Configurações | Categorias, meu perfil (nome/e-mail), troca de senha |
 | Backups | Dump diário automático do PostgreSQL com retenção (7 diários, 4 semanais, 6 mensais) + scripts de backup/restore |
 
 ## Arquitetura
@@ -31,7 +32,8 @@ Internet ──► Nginx (80/443, TLS, rate limit) ──► app (Next.js standa
 
 - **Server Components** leem o banco diretamente (rápido, sem camada extra).
 - **Mutations** via API REST em `src/app/api/**` (validadas com Zod), chamadas pelos componentes cliente.
-- **Autenticação:** e-mail + senha (bcrypt), sessão em JWT assinado (HS256) em cookie `httpOnly`; middleware protege todas as rotas; limite de tentativas no app e no Nginx.
+- **Autenticação:** e-mail + senha (bcrypt), sessão em JWT assinado (HS256) em cookie `httpOnly`, validada no banco a cada requisição (usuário desativado ou senha redefinida perde o acesso na hora); middleware protege todas as rotas; limite de tentativas no app e no Nginx.
+- **Perfis:** Administrador gerencia usuários; Membro usa o app normalmente. Sempre resta ao menos um administrador ativo.
 - **Regras de dinheiro:** valores em `Decimal(14,2)`; datas como `DATE` (sem fuso) para evitar deslocamentos.
 - **Investimentos:** movimentações (aporte/resgate/atualização de valor); aporte com conta debita o saldo, resgate credita. Lucro calculado por custo médio.
 - **Cartão:** compras ficam `PENDING` na fatura (afetam o limite, não o saldo); ao pagar a fatura viram `PAID` na conta escolhida.

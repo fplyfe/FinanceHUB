@@ -19,6 +19,7 @@ import {
   Settings,
   Sun,
   Target,
+  Users,
   Wallet,
   X,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const NAV = [
   { href: "/net-worth", label: "Patrimônio", icon: Scale },
   { href: "/goals", label: "Metas", icon: Target },
   { href: "/reports", label: "Relatórios", icon: FileText },
+  { href: "/users", label: "Usuários", icon: Users },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
@@ -98,7 +100,7 @@ function Brand() {
   );
 }
 
-export function Sidebar({ userName }: { userName: string }) {
+export function Sidebar({ userName, role }: { userName: string; role: "ADMIN" | "MEMBER" }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -112,6 +114,7 @@ export function Sidebar({ userName }: { userName: string }) {
     <div className="flex items-center justify-between gap-2 border-t pt-3">
       <div className="min-w-0 px-3">
         <p className="truncate text-sm font-medium">{userName}</p>
+        <p className="text-[11px] text-muted-foreground">{role === "ADMIN" ? "Administrador" : "Membro"}</p>
         <button onClick={logout} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
           <LogOut className="size-3" /> Sair
         </button>

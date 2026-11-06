@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Pencil, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/input";
@@ -29,6 +31,51 @@ function CategoryForm({ c }: { c?: Category }) {
         </Field>
       </div>
     </>
+  );
+}
+
+function ProfileCard({ me }: { me: { name: string; email: string; role: "ADMIN" | "MEMBER" } }) {
+  const router = useRouter();
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Meu perfil
+          <Link href="/users" className="flex items-center gap-1 text-xs font-normal text-primary hover:underline">
+            <Users className="size-3.5" /> Gerenciar usuários
+          </Link>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="grid max-w-sm gap-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            try {
+              await api("/api/auth/profile", "PUT", { name: fd.get("name"), email: fd.get("email") });
+              setMsg({ ok: true, text: "Perfil atualizado." });
+              router.refresh();
+            } catch (err) {
+              setMsg({ ok: false, text: err instanceof Error ? err.message : "Erro" });
+            }
+          }}
+        >
+          <Field label="Nome">
+            <Input name="name" defaultValue={me.name} required maxLength={60} />
+          </Field>
+          <Field label="E-mail (login)">
+            <Input name="email" type="email" defaultValue={me.email} required maxLength={120} />
+          </Field>
+          <p className="text-xs text-muted-foreground">Perfil de acesso: {me.role === "ADMIN" ? "Administrador" : "Membro"}</p>
+          {msg && <p className={`text-sm ${msg.ok ? "text-success" : "text-destructive"}`}>{msg.text}</p>}
+          <Button type="submit" className="justify-self-start">
+            Salvar perfil
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -71,11 +118,11 @@ function PasswordCard() {
   );
 }
 
-export function SettingsView({ categories, users }: { categories: Category[]; users: { id: string; name: string; email: string }[] }) {
+export function SettingsView({ categories, me }: { categories: Category[]; me: { name: string; email: string; role: "ADMIN" | "MEMBER" } }) {
   const toBody = (fd: FormData) => Object.fromEntries(fd);
   return (
     <>
-      <PageHeader title="Configurações" description="Categorias, usuários e segurança">
+      <PageHeader title="Configurações" description="Categorias, perfil e segurança">
         <FormDialog
           title="Nova categoria"
           onSubmit={(fd) => api("/api/categories", "POST", toBody(fd))}
@@ -126,21 +173,8 @@ export function SettingsView({ categories, users }: { categories: Category[]; us
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <ProfileCard me={me} />
         <PasswordCard />
-        <Card>
-          <CardHeader>
-            <CardTitle>Usuários</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            {users.map((u) => (
-              <div key={u.id} className="flex justify-between">
-                <span className="font-medium">{u.name}</span>
-                <span className="text-muted-foreground">{u.email}</span>
-              </div>
-            ))}
-            <p className="mt-2 text-xs text-muted-foreground">Os dois usuários são criados no deploy (variáveis USER1_* e USER2_*).</p>
-          </CardContent>
-        </Card>
       </div>
     </>
   );
